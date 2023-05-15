@@ -227,7 +227,6 @@ struct QnAView: View {
                         .padding(.trailing, 35)
                     }
                 }
-            
             }
         }
     }
