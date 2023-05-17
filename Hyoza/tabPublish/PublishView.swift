@@ -10,7 +10,6 @@ import UIKit
 import CoreData
 
 struct PublishView: View {
-    @Environment(\.displayScale) var displayScale
     
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Question.timestamp, ascending:false)],
@@ -18,15 +17,15 @@ struct PublishView: View {
         animation: .default)
     private var questions: FetchedResults<Question>
     
-    @State var titleText = ""
-    @State var periodSelection: PeriodSelection = .custom
-    @State var startDate: Date = Date()
-    @State var endDate: Date = Date()
-    @State var selectedMonth: Month = .may
-    @State var selectedYear: Int = (PersistenceController.shared.oldestAnsweredQuestion?.timestamp ?? Date()).year
+    @State private var titleText = ""
+    @State private var periodSelection: PeriodSelection = .custom
+    @State private var startDate: Date = Date()
+    @State private var endDate: Date = Date()
+    @State private var selectedMonth: Month = .may
+    @State private var selectedYear: Int = (PersistenceController.shared.oldestAnsweredQuestion?.timestamp ?? Date()).year
     
     
-    enum K {
+    private enum K {
         static let cornerRadius: CGFloat = 10
         static let title: String = "자서전 출판"
         static let leadingPadding: CGFloat = 20
@@ -44,19 +43,24 @@ struct PublishView: View {
             Color.backgroundColor
             VStack(alignment: .center, spacing: .zero) {
                 header
+                    .padding(.top, 4)
                 PeriodSegmentView(selection: $periodSelection)
                     .onChange(
                         of: periodSelection,
                         perform: segmentedSelectionDidChange
                     )
                 periodView
+                    .offset(.init(width: 0, height: -8))
                 titleTextField
+                    .offset(.init(width: 0, height: -16))
                 Spacer()
                 ResultBookView(count: questions.count, title: titleText)
                     .padding()
                 countLabel
                 publishButton
             }
+            .padding(.horizontal, K.leadingPadding)
+            
         }
         .ignoresSafeArea(edges: .top)
         .onAppear {
@@ -64,8 +68,8 @@ struct PublishView: View {
         }
     }
     
-
-    var header: some View {
+    
+    private var header: some View {
         HStack {
             Text(K.title)
                 .font(.largeTitle)
@@ -73,12 +77,11 @@ struct PublishView: View {
                 .foregroundColor(Color.textColor)
             Spacer()
         }
-        .padding(.leading, K.leadingPadding)
         .padding(.top, K.topPadding)
     }
     
     
-    func segmentedSelectionDidChange(newValue: PeriodSelection) {
+    private func segmentedSelectionDidChange(newValue: PeriodSelection) {
         switch newValue {
         case .custom:
             startDate = Date().start
@@ -93,14 +96,14 @@ struct PublishView: View {
         fetchAfterDateChanged()
     }
     
-    var titleTextField: some View {
+    private var titleTextField: some View {
         TextField(K.textFieldTitle, text: $titleText)
             .background(.white)
             .cornerRadius(K.cornerRadius)
             .publishCardify()
     }
     
-    var periodView: some View {
+    private var periodView: some View {
         ZStack(alignment: .top) {
             PeriodView(
                 cornerRadius: K.cornerRadius,
@@ -124,22 +127,22 @@ struct PublishView: View {
         }
     }
     
-    func fetchAfterDateChanged() {
+    private func fetchAfterDateChanged() {
         withAnimation {
             questions.nsPredicate = .hasAnswer && .timestampIn(between: startDate, and: endDate)
         }
     }
     
-    var countLabel: some View {
+    private var countLabel: some View {
         Text(K.countLabel(questions.count))
             .font(.callout)
             .foregroundColor(.gray)
     }
     
     // ShareSheet를 열기 위한 변수로 사용하기 위해 Identifiable을 구현한 Wrapper
-    struct PDFWrapper: Identifiable {
+    private struct PDFWrapper: Identifiable {
         var id: UUID = UUID()
-        var data: Data
+        var url: URL = FileManager.default.temporaryDirectory
     }
     
     // ShareSheet로 공유할 데이터
@@ -147,59 +150,55 @@ struct PublishView: View {
 }
 
 extension PublishView {
-    
-    var publishButton: some View {
-        HStack {
-            Spacer()
-            Button {
-                
-                // 질문과 답변을 PDF Text로 변환
-                var pdfTexts: [PDFText] = []
-                
-                pdfTexts.append(PDFText(string: titleText, attributes: PDFTextStyle.title, alignment: .center, indent: 0, spacing: .title))
-                
-                for item in questions {
-                    pdfTexts.append(PDFText(string: item.wrappedQuestion, attributes: PDFTextStyle.question, alignment: .left, spacing: .question))
-                    
-                    if let answer = item.answer?.answer, let date = item.answer?.answerTime {
-                        pdfTexts.append(PDFText(string: answer, attributes: PDFTextStyle.answer, alignment: .left, spacing: .answer))
-                        pdfTexts.append(PDFText(string: date.fullString, attributes: PDFTextStyle.date, alignment: .left, spacing: .date))
-                    }
-                    
-                    if let comment = item.answer?.comment {
-                        pdfTexts.append(PDFText(string: comment, attributes: PDFTextStyle.comment, alignment: .left, spacing: .comment))
-                    }
-                }
-                
-                // PDF Text를 PDF로 변환
-                let generator = PDFGenerator()
-                let pdfData = generator.generatePDF(title: titleText, texts: pdfTexts)
-                
-                // PDF 공유
-                pdfToShare = PDFWrapper(data: pdfData)
-                
-            } label: {
-                ZStack {
-                    questions.isEmpty ? Color.textThirdColor : Color.buttonColor
-                    Text(K.publishButtonTitle)
-                        .foregroundColor(.buttonTextColor)
-                        .bold()
-                }
-                .frame(width: UIScreen.screenWidth * 0.8, height: 57)
-                .cornerRadius(50)
-            }
-            .disabled(questions.isEmpty)
-            .sheet(item: $pdfToShare) { data in
-                ActivityViewControllerWrapper(items: [data.data], activities: [])
-            }
-            Spacer()
+    private var publishButton: some View {
+        ButtonView (
+            buttonColor: (questions.isEmpty || titleText.isEmpty) ? .textThirdColor : .buttonColor,
+            content: K.publishButtonTitle,
+            action: shareToPdf
+        )
+        .sheet(item: $pdfToShare) { data in
+            ActivityViewControllerWrapper(items: [data.url], activities: [])
         }
-        .padding()
+        .padding(.vertical, 20)
+        .padding(.bottom, 20)
+        .disabled(questions.isEmpty || titleText.isEmpty)
     }
-}
-
-struct PublishView_Previews: PreviewProvider {
-    static var previews: some View {
-        PublishView()
+    
+    private func shareToPdf() {
+        // 질문과 답변을 PDF Text로 변환
+        var pdfTexts: [PDFText] = []
+        
+        pdfTexts.append(PDFText(string: titleText, attributes: PDFTextStyle.title, alignment: .center, indent: 0, spacing: .title))
+        
+        for item in questions {
+            pdfTexts.append(PDFText(string: item.wrappedQuestion, attributes: PDFTextStyle.question, alignment: .left, spacing: .question))
+            
+            if let answer = item.answer?.answer, let date = item.answer?.answerTime {
+                pdfTexts.append(PDFText(string: answer, attributes: PDFTextStyle.answer, alignment: .left, spacing: .answer))
+                pdfTexts.append(PDFText(string: date.fullString, attributes: PDFTextStyle.date, alignment: .left, spacing: .date))
+            }
+            
+            if let comment = item.answer?.comment {
+                pdfTexts.append(PDFText(string: comment, attributes: PDFTextStyle.comment, alignment: .left, spacing: .comment))
+            }
+        }
+        
+        // PDF Text를 PDF로 변환
+        let generator = PDFGenerator()
+        let pdfData = generator.generatePDF(title: titleText, texts: pdfTexts)
+        
+        let fileName = "\(titleText)_\(Date().numberOnlyString).pdf"
+        let pdfURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+        
+        // PDF 공유
+        pdfToShare = PDFWrapper(
+            url:pdfURL
+        )
+        
+        do {
+            try pdfData.write(to: pdfToShare?.url ?? pdfURL)
+        } catch {
+            print(error)
+        }
     }
 }

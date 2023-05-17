@@ -88,24 +88,14 @@ class PersistenceController: ObservableObject {
             description.url = URL(fileURLWithPath: "/dev/null")
         }
         
-        // Enable persistent history tracking
-        /// - Tag: persistentHistoryTracking
-//        description.setOption(true as NSNumber,
-//                              forKey: NSPersistentHistoryTrackingKey)
-//
         container.loadPersistentStores { storeDescription, error in
             if let error = error as NSError? {
                 fatalError("Unresolved error \(error), \(error.userInfo)")
             }
         }
         
-        // This sample refreshes UI by consuming store changes via persistent history tracking.
-        /// - Tag: viewContextMergeParentChanges
-//        container.viewContext.automaticallyMergesChangesFromParent = false
+        
         container.viewContext.automaticallyMergesChangesFromParent = true
-//        container.viewContext.name = "viewContext"
-        /// - Tag: viewContextMergePolicy
-//        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         
         if easyQuestions.count == 0 {
             Task {
@@ -115,7 +105,7 @@ class PersistenceController: ObservableObject {
     }
     
     // MARK: Save Context
-    func saveContext () {
+    private func saveContext () {
         let context = container.viewContext
         if context.hasChanges {
             do {
@@ -133,7 +123,7 @@ extension PersistenceController {
     var fileName: String { "question_samples" }
     var fileExtension: String { "json" }
     
-    func fetchQuestion() async throws {
+    private func fetchQuestion() async throws {
         guard let fileUrl = Bundle.main.url(forResource: fileName, withExtension: fileExtension) else {
             return
         }

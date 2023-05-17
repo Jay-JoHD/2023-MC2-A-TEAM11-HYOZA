@@ -27,17 +27,20 @@ struct PeriodView: View {
                 DatePicker(
                     K.startText,
                     selection: $startDate,
-                    in: firstDate...endDate,
+//                    in: firstDate...endDate,
+                    in: ...endDate,
                     displayedComponents: [.date]
                 )
                 
                 DatePicker(
                     K.endText,
                     selection: $endDate,
-                    in: startDate...Date(),
+//                    in: startDate...Date(),
+                    in: startDate...,
                     displayedComponents: [.date]
                 )
             }
+            .foregroundColor(.textColor)
             .colorMultiply(Color.orange)
             .datePickerStyle(CompactDatePickerStyle())
             .environment(\.locale, Locale(identifier: K.pickerLocale))

@@ -11,13 +11,17 @@ import CoreData
 struct ListView: View {
     @Environment(\.managedObjectContext) var managedObjectContext
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Question.timestamp, ascending:true)],
+        sortDescriptors: [NSSortDescriptor(keyPath: \Question.timestamp, ascending:false)],
         predicate: .hasAnswer,
         animation: .default)
     
     private var items : FetchedResults<Question>
     @State private var searchText : String = ""
     @State private var answerText : String = "기본답변입니다."
+    
+    init(){
+        UINavigationBar.appearance().layoutMargins.left = 20
+    }
     
     //코어데이터에서 호출하는 쿼리
     var query : Binding<String> {
@@ -42,17 +46,10 @@ struct ListView: View {
                             NavigationLink(destination : QnAView(data:item, isEditing: false)){
                                 CardView(shadowColor: Color.black.opacity(0.1)) {
                                     CellContents(item : item)
-                                        .padding(4)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 4)
                                 }
                                 .padding([.leading, .trailing], 20)
-//                                CellContents(item : item)
-//                                    .cardify(backgroundColor: .white,
-//                                             cornerRadius: 15,
-//                                             shadowColor: .black.opacity(0.1),
-//                                             shadowRadius: 5,
-//                                             corners: .allCorners
-//                                           )
-//                                    .padding(.bottom, 20)
                             }
                         }
                     }.padding(.top, 4)
@@ -80,22 +77,22 @@ private struct CellContents : View {
         VStack(alignment : .leading, spacing: 8) {
             HStack {
                 Text(item.wrappedTimestamp, formatter : itemFormatter)
-                    .font(.subheadline.bold())
-                    .foregroundColor(.tapBarDarkGray)
+                    .font(.subheadline)
+                    .foregroundColor(.textSecondaryColor)
                     .lineLimit(1)
                 Spacer()
             }
             
             Text(item.wrappedQuestion)
                 .font(.body.bold())
-                .foregroundColor(.textBlack)
+                .foregroundColor(.textColor)
                 .lineLimit(2)
                 .multilineTextAlignment(.leading)
             
-
+            
             Text(item.wrappedAnswer.answerDetail)
                 .font(.body)
-                .foregroundColor(.textBlack)
+                .foregroundColor(.textColor)
                 .lineLimit(2)
                 .multilineTextAlignment(.leading)
         }

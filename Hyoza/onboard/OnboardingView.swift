@@ -15,24 +15,19 @@ struct OnboardingView: View {
     var body: some View {
         VStack(spacing: 0) {
             TabView(selection: $selected) {
-                Page1View()
-                    .tag(0)
-                
-                Page2View()
-                    .tag(1)
-                
-                Page3View()
-                    .tag(2)
+                Page1View().tag(0)
+                Page2View().tag(1)
+                Page3View().tag(2)
             }
             .tabViewStyle(.page(indexDisplayMode: .always))
             .indexViewStyle(.page(backgroundDisplayMode: .never))
             .padding(.top, 60)
             .onAppear(perform: {
-                UIPageControl.appearance().currentPageIndicatorTintColor = UIColor(named: "SelectedColor")
-                UIPageControl.appearance().pageIndicatorTintColor = UIColor(named: "CapsuleColor")
+                UIPageControl.appearance().currentPageIndicatorTintColor = UIColor.selectedColor
+                UIPageControl.appearance().pageIndicatorTintColor = UIColor.capsuleColor
             })
             
-            Button {
+            ButtonView (content: (selected < 2 ? "다음" : "시작하기")) {
                 // 1, 2 페이지인 경우
                 if selected < 2 {
                     selected += 1
@@ -43,19 +38,8 @@ struct OnboardingView: View {
                     // 메인 화면 전환
                     showOnboardingView = false
                 }
-                
-            } label: {
-                HStack {
-                    Spacer()
-                    Text(selected < 2 ? "다음" : "시작하기").font(.system(size: 20))
-                        .padding(10)
-                    Spacer()
-                }
             }
-            .buttonStyle(.borderedProminent)
-            .buttonBorderShape(.capsule)
             .padding(20)
-            .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 4)
             
             Button {
                 // 최초 접속 여부 저장
@@ -64,14 +48,14 @@ struct OnboardingView: View {
                 showOnboardingView = false
             } label: {
                 Text("Skip").font(.system(size:15))
-                    .foregroundColor(Color("TextThirdColor"))
+                    .foregroundColor(Color.textThirdColor)
             }
             .opacity(selected < 2 ? 1 : 0)
             
         }
         .padding(.bottom, 40)
         .background(
-            Color("BackgroundColor")
+            Color.backgroundColor
                 .ignoresSafeArea()
         )
     }

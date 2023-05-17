@@ -31,43 +31,51 @@ struct TodayView: View {
     
     var body: some View {
         NavigationStack {
-                VStack {
-                    VStack(alignment: .leading) {
-                        Text(Date().dateOnlyString)
-                            .font(.system(.footnote))
-                        HStack {
-                            Text("오늘의 질문")
-                                .font(.largeTitle)
-                                .bold()
-                                .foregroundColor(.textBlack)
-                            Spacer()
-                            ContinueIconView(text: $continueText, textOpacity: $continueTextOpacity, continuousDayCount: $continuousDayCount)
-                                .onTapGesture {
-                                    if !isContinueIconAnimating {
-                                        makeCoutinueIconLargeAndSmall()
-                                    }
-                                }
-                        }
-                    }
-                    Spacer()
-                    ZStack {
-                        if isQuestionBoxViewTapped {
-                            CardView(cornerRadius: 16, shadowColor: .black.opacity(0.05), shadowRadius: 12) {
-                                QuestionCardView(openDegree: $openDegree, closedDegree: $closedDegree, easyQuestions: $easyQuestions, hardQuestions: $hardQuestions, selectedQuestion: $selectedQuestion)
-                            }
-                        } else {
-                            CardView(cornerRadius: 16, shadowColor: .black.opacity(0.05), shadowRadius: 12) {
-                                QuestionBoxView(easyQuestions: $easyQuestions, hardQuestions: $hardQuestions, isQuestionBoxViewTapped: $isQuestionBoxViewTapped)
-                            }
+            VStack {
+                VStack(alignment: .leading) {
+                    Text(Date().dateOnlyString)
+                        .font(.footnote)
+                        .foregroundColor(.textSecondaryColor)
+                        .bold()
+                        .offset(CGSize(width:0, height:8))
+                    HStack {
+                        Text("오늘의 질문")
+                            .font(.largeTitle)
+                            .bold()
+                            .foregroundColor(.textColor)
+                        Spacer()
+                        ContinueIconView(text: $continueText, textOpacity: $continueTextOpacity, continuousDayCount: $continuousDayCount)
                             .onTapGesture {
-                                self.isQuestionBoxViewTapped.toggle()
+                                if !isContinueIconAnimating {
+                                    makeCoutinueIconLargeAndSmall()
+                                }
                             }
+                    }
+                }
+                Spacer()
+                ZStack {
+                    if isQuestionBoxViewTapped {
+                        CardView(cornerRadius: 16, shadowColor: .black.opacity(0.05), shadowRadius: 12) {
+                            QuestionCardView(openDegree: $openDegree, closedDegree: $closedDegree, easyQuestions: $easyQuestions, hardQuestions: $hardQuestions, selectedQuestion: $selectedQuestion)
+                        }
+                    } else {
+                        CardView(cornerRadius: 16, shadowColor: .black.opacity(0.05), shadowRadius: 12) {
+                            QuestionBoxView(easyQuestions: $easyQuestions, hardQuestions: $hardQuestions, isQuestionBoxViewTapped: $isQuestionBoxViewTapped)
+                        }
+                        .onTapGesture {
+                            self.isQuestionBoxViewTapped.toggle()
                         }
                     }
-                    Spacer()
                 }
-                .padding(20)
-            .background(Color.backGroundWhite.ignoresSafeArea())
+                Spacer()
+            }
+            .onChange(of: selectedQuestion,
+                      perform: { _ in
+                
+                continuousDayCount = AttendanceManager().isAttending ? AttendanceManager().getAttendanceDay() : 0
+            })
+            .padding(20)
+            .background(Color.backgroundColor.ignoresSafeArea())
             .onAppear() {
                 if selectedQuestion != nil || PersistenceController.shared.todayAnsweredQuestion != nil {
                     closedDegree = -90
@@ -113,7 +121,16 @@ struct ContinueIconView: View {
     
     var body: some View {
         CardView(cornerRadius: 16, shadowColor: .black.opacity(0.05), shadowRadius: 12) {
-            HStack {
+            HStack(spacing: 0) {
+                if let text {
+                    Text(text)
+                        .font(.caption)
+                        .foregroundColor(.textColor)
+                        .bold()
+                        .padding(.horizontal, 6)
+                        .opacity(textOpacity)
+                    
+                }
                 switch continuousDayCount {
                 case 1..<4:
                     Text("💛")
@@ -125,12 +142,6 @@ struct ContinueIconView: View {
                     Text("❤️‍🔥")
                 default:
                     Text("🤍")
-                }
-                if let text {
-                    Text(text)
-                        .font(.caption)
-                        .bold()
-                        .opacity(textOpacity)
                 }
             }
         }

@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+// TODO: - Action 하나의 함수로 묶고 두 버튼에 호출하기
+
 struct QuestionBoxView: View {
     private let persistenceController = PersistenceController.shared
     @Binding var easyQuestions: [Question]
@@ -14,25 +16,34 @@ struct QuestionBoxView: View {
     @Binding var isQuestionBoxViewTapped: Bool
     
     var body: some View {
-            VStack {
-                Text("오늘의 질문 꾸러미")
-                    .font(.title)
-                    .bold()
-                    .foregroundColor(.textBlack)
-                Button {
-                    easyQuestions = persistenceController.filteredQuestion(which: .isNotChoosenAndEasy)
-                    hardQuestions = persistenceController.filteredQuestion(which: .isNotChoosenAndHard)
-                    self.isQuestionBoxViewTapped.toggle()
-                    print("[QuestionBoxView - easyQuestions]\(easyQuestions)")
-                    print("[QuestionBoxView - hardQuestions]\(hardQuestions)")
-                } label: {
-                    Image("questionBoxImage")
-                        .resizable()
-                        .scaledToFit()
-                        .foregroundColor(.backGroundLightOrange)
-                        .padding(30)
-                }
+        VStack {
+            Text("오늘의 질문 꾸러미")
+                .font(.title)
+                .bold()
+                .foregroundColor(.textColor)
+                .padding(.top, 30)
+            Button {
+                openQuestions()
+            } label: {
+                Image("questionBoxImage")
+                    .resizable()
+                    .scaledToFit()
+                    .foregroundColor(.capsuleColor)
+                    .padding(30)
             }
+            ButtonView(content: "열어보기") {
+                openQuestions()
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 20)
+        }
+        .frame(height: UIScreen.screenHeight * 0.6)
+    }
+    
+    func openQuestions() -> Void {
+        easyQuestions = persistenceController.easyQuestions
+        hardQuestions = persistenceController.hardQuestions
+        self.isQuestionBoxViewTapped.toggle()
     }
 }
 
